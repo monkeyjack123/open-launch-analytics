@@ -1,22 +1,24 @@
 # open-launch-analytics
 
-Open source launch attribution and analytics dashboard
+Open source launch attribution and analytics dashboard.
 
-## Why this exists
-This project helps teams launch products faster with measurable outcomes.
+## MVP increment shipped (2026-03-05)
 
-## MVP scope (v0.1)
-- Core workflow
-- API/CLI interface
-- Example demo data
-- Quickstart docs
+Implemented core event contract utilities for backlog Issues **#1 (schema/validation)** and **#3 (UTM normalization)**:
 
-## Roadmap
-- v0.1: baseline MVP
-- v0.2: integrations
-- v0.3: collaboration + analytics improvements
+- `validate_event(payload)` returns field-level validation errors
+- `normalize_event(payload)` trims/lowercases UTM values and applies defaults
+- unit tests covering success + failure behavior
+- schema contract docs in `docs/event-schema.md`
 
-## Getting started
+## Quickstart
 
-authoring in progress.
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_events.py' -v
+```
 
+## Repo layout
+
+- `src/open_launch_analytics/events.py` — validation + normalization logic
+- `tests/test_events.py` — MVP unit tests
+- `docs/event-schema.md` — ingestion contract
