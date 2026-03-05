@@ -1,6 +1,9 @@
 import unittest
 
-from open_launch_analytics.attribution import build_first_touch_attribution
+from open_launch_analytics.attribution import (
+    build_first_touch_attribution,
+    build_last_touch_attribution,
+)
 
 
 class FirstTouchAttributionTests(unittest.TestCase):
@@ -54,6 +57,60 @@ class FirstTouchAttributionTests(unittest.TestCase):
 
         table = build_first_touch_attribution(events)
         self.assertEqual(table["u1"]["event_id"], "evt_a")
+        self.assertEqual(table["u1"]["utm_source"], "reddit")
+
+
+class LastTouchAttributionTests(unittest.TestCase):
+    def test_picks_latest_tagged_event_per_user(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "X",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T09:30:00Z",
+                "user_id": "u1",
+                "utm_source": "LinkedIn",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T10:00:00Z",
+                "user_id": "u2",
+            },
+        ]
+
+        table = build_last_touch_attribution(events)
+
+        self.assertEqual(table["u1"]["event_id"], "evt_2")
+        self.assertEqual(table["u1"]["utm_source"], "linkedin")
+        self.assertNotIn("u2", table)
+
+    def test_deterministic_tie_breaker_prefers_larger_event_id(self):
+        events = [
+            {
+                "event_id": "evt_a",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "google",
+            },
+            {
+                "event_id": "evt_b",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "reddit",
+            },
+        ]
+
+        table = build_last_touch_attribution(events)
+        self.assertEqual(table["u1"]["event_id"], "evt_b")
         self.assertEqual(table["u1"]["utm_source"], "reddit")
 
 
