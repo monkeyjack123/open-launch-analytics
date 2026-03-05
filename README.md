@@ -36,6 +36,14 @@ Added conversion metrics aggregation MVP logic for backlog **Issue #5**:
 - tests for grouping, rate math, and date-range backfill behavior
 - pipeline contract docs in `docs/conversion-metrics.md`
 
+Added basic cohort aggregation backend for backlog **Issue #7**:
+
+- `build_signup_cohorts(events, days=(0,1,7), utm_source=None, utm_campaign=None)` builds daily signup cohorts
+- computes D0/D1/D7 activation counts and rates per cohort
+- supports normalized source/campaign filters for segmented cohort views
+- tests for day-offset math and segmentation filters
+- cohort contract docs in `docs/basic-cohorts.md`
+
 ## Quickstart
 
 ```bash
@@ -46,8 +54,14 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 - `src/open_launch_analytics/events.py` — validation + normalization logic
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
+- `src/open_launch_analytics/metrics.py` — conversion metric aggregation + backfill helpers
+- `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `tests/test_events.py` — event contract tests
 - `tests/test_attribution.py` — attribution tests
+- `tests/test_metrics.py` — conversion metric tests
+- `tests/test_cohorts.py` — cohort aggregation tests
 - `docs/event-schema.md` — ingestion contract
 - `docs/first-touch-attribution.md` — first-touch contract
 - `docs/last-touch-attribution.md` — last-touch contract
+- `docs/conversion-metrics.md` — conversion pipeline contract
+- `docs/basic-cohorts.md` — cohort aggregation contract
