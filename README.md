@@ -12,6 +12,14 @@ Implemented core event contract utilities for backlog Issues **#1 (schema/valida
 - unit tests covering success + failure behavior
 - schema contract docs in `docs/event-schema.md`
 
+Added first-touch attribution MVP logic for backlog **Issue #4**:
+
+- `build_first_touch_attribution(events)` returns deterministic per-user first-touch UTM records
+- attribution only considers tagged events (not default `direct/unknown` fallbacks)
+- deterministic tie-break on equal timestamps using `event_id`
+- tests for earliest-touch selection and tie-break behavior
+- attribution contract docs in `docs/first-touch-attribution.md`
+
 ## Quickstart
 
 ```bash
