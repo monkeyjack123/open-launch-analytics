@@ -28,6 +28,14 @@ Added last-touch attribution MVP logic for backlog **Issue #5**:
 - tests for latest-touch selection and tie-break behavior
 - attribution contract docs in `docs/last-touch-attribution.md`
 
+Added conversion metrics aggregation MVP logic for backlog **Issue #5**:
+
+- `aggregate_conversion_metrics(events)` groups by date/source/campaign with `visits/signups/activations`
+- computes `signup_rate` and `activation_rate`
+- `backfill_conversion_metrics(events, start_date, end_date)` supports range recomputation
+- tests for grouping, rate math, and date-range backfill behavior
+- pipeline contract docs in `docs/conversion-metrics.md`
+
 ## Quickstart
 
 ```bash

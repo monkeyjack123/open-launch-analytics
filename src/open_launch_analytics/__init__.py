@@ -3,6 +3,7 @@
 from .attribution import build_first_touch_attribution, build_last_touch_attribution
 from .events import normalize_event, validate_event
 from .ingest import ingest_event
+from .metrics import aggregate_conversion_metrics, backfill_conversion_metrics
 
 __all__ = [
     "normalize_event",
@@ -10,4 +11,6 @@ __all__ = [
     "ingest_event",
     "build_first_touch_attribution",
     "build_last_touch_attribution",
+    "aggregate_conversion_metrics",
+    "backfill_conversion_metrics",
 ]
