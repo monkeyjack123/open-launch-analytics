@@ -24,19 +24,44 @@ If optional UTM fields are missing or blank, defaults are applied:
 
 All provided UTM values are trimmed and lowercased.
 
-## Validation response shape (planned API)
+## Ingest response envelope (MVP)
 
-Invalid payloads should return a structured 400 body:
+`ingest_event(payload)` now returns a stable API-ready envelope used by the planned `POST /api/events` route.
+
+Accepted payload (`202`):
 
 ```json
 {
-  "error": "invalid_payload",
+  "ok": true,
+  "status": 202,
+  "errors": [],
+  "event": {
+    "event_id": "evt_100",
+    "event_name": "signup",
+    "timestamp": "2026-03-05T10:00:00Z",
+    "user_id": "user_100",
+    "utm_source": "producthunt",
+    "utm_medium": "unknown",
+    "utm_campaign": "unknown",
+    "utm_term": "unknown",
+    "utm_content": "unknown"
+  }
+}
+```
+
+Invalid payload (`400`):
+
+```json
+{
+  "ok": false,
+  "status": 400,
   "errors": [
     {
       "field": "timestamp",
       "error": "invalid_format",
-      "message": "timestamp must be ISO-8601"
+      "message": "timestamp must be ISO-8601 (e.g., 2026-03-05T09:00:00Z)"
     }
-  ]
+  ],
+  "event": null
 }
 ```
