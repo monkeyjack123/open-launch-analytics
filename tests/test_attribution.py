@@ -113,6 +113,30 @@ class LastTouchAttributionTests(unittest.TestCase):
         self.assertEqual(table["u1"]["event_id"], "evt_b")
         self.assertEqual(table["u1"]["utm_source"], "reddit")
 
+    def test_attribution_skips_invalid_timestamps(self):
+        events = [
+            {
+                "event_id": "evt_bad",
+                "event_name": "visit",
+                "timestamp": "invalid",
+                "user_id": "u1",
+                "utm_source": "reddit",
+            },
+            {
+                "event_id": "evt_good",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T09:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+            },
+        ]
+
+        first_touch = build_first_touch_attribution(events)
+        last_touch = build_last_touch_attribution(events)
+
+        self.assertEqual(first_touch["u1"]["event_id"], "evt_good")
+        self.assertEqual(last_touch["u1"]["event_id"], "evt_good")
+
 
 if __name__ == "__main__":
     unittest.main()

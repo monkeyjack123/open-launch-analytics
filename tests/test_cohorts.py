@@ -111,6 +111,30 @@ class SignupCohortTests(unittest.TestCase):
         self.assertEqual(row["d0_activated"], 1)
         self.assertEqual(row["d0_rate"], 1.0)
 
+    def test_build_signup_cohorts_skips_invalid_timestamps(self):
+        events = [
+            {
+                "event_id": "evt_bad",
+                "event_name": "signup",
+                "timestamp": "invalid",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_good",
+                "event_name": "signup",
+                "timestamp": "2026-03-03T09:00:00Z",
+                "user_id": "u2",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+        ]
+
+        rows = build_signup_cohorts(events)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["signups"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

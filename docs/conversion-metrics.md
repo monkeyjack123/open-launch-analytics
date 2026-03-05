@@ -34,4 +34,5 @@ Rows are sorted by `(date, utm_source, utm_campaign)` for stable output.
 ## Notes
 
 - Uses the existing event normalization logic to ensure consistent UTM bucketing.
+- Events with malformed ISO-8601 timestamps are skipped instead of failing the full aggregation/backfill run.
 - Intended for MVP data pipeline and testability before wiring to database/materialized views.

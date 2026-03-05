@@ -9,8 +9,11 @@ SIGNUP_EVENT_NAMES = {"signup"}
 ACTIVATION_EVENT_NAMES = {"activation", "activated"}
 
 
-def _parse_date(value: str) -> datetime.date:
-    return datetime.fromisoformat(value.replace("Z", "+00:00")).date()
+def _parse_date(value: str) -> datetime.date | None:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).date()
+    except ValueError:
+        return None
 
 
 def build_signup_cohorts(
@@ -56,6 +59,8 @@ def build_signup_cohorts(
             continue
 
         day = _parse_date(timestamp)
+        if day is None:
+            continue
 
         if event_name in SIGNUP_EVENT_NAMES:
             previous_signup_day = user_signup_day.get(user_id)

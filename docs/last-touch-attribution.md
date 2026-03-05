@@ -11,6 +11,7 @@
    - `utm_campaign != unknown`
 3. For each `user_id`, choose the latest event by timestamp.
 4. If timestamps tie, select lexicographically larger `event_id` for deterministic output.
+5. Events with malformed timestamps are ignored (defensive behavior for dirty streams).
 
 ## Output shape
 

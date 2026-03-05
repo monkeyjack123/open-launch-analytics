@@ -6,8 +6,11 @@ from typing import Any
 from .events import normalize_event
 
 
-def _parse_timestamp(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+def _parse_timestamp(value: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def _is_utm_tagged(event: dict[str, Any]) -> bool:
@@ -56,6 +59,8 @@ def build_first_touch_attribution(events: list[dict[str, Any]]) -> dict[str, dic
             continue
         if not _is_utm_tagged(event):
             continue
+        if _parse_timestamp(timestamp) is None:
+            continue
 
         candidate = _extract_candidate(event)
 
@@ -66,6 +71,12 @@ def build_first_touch_attribution(events: list[dict[str, Any]]) -> dict[str, dic
 
         candidate_ts = _parse_timestamp(candidate["timestamp"])
         current_ts = _parse_timestamp(current["timestamp"])
+
+        if candidate_ts is None:
+            continue
+        if current_ts is None:
+            winners[user_id] = candidate
+            continue
 
         if candidate_ts < current_ts:
             winners[user_id] = candidate
@@ -101,6 +112,8 @@ def build_last_touch_attribution(events: list[dict[str, Any]]) -> dict[str, dict
             continue
         if not _is_utm_tagged(event):
             continue
+        if _parse_timestamp(timestamp) is None:
+            continue
 
         candidate = _extract_candidate(event)
 
@@ -111,6 +124,12 @@ def build_last_touch_attribution(events: list[dict[str, Any]]) -> dict[str, dict
 
         candidate_ts = _parse_timestamp(candidate["timestamp"])
         current_ts = _parse_timestamp(current["timestamp"])
+
+        if candidate_ts is None:
+            continue
+        if current_ts is None:
+            winners[user_id] = candidate
+            continue
 
         if candidate_ts > current_ts:
             winners[user_id] = candidate

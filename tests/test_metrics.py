@@ -99,6 +99,34 @@ class ConversionMetricsTests(unittest.TestCase):
         self.assertEqual(rows[0]["date"], "2026-03-05")
         self.assertEqual(rows[0]["signups"], 1)
 
+    def test_aggregate_and_backfill_skip_invalid_timestamps(self):
+        events = [
+            {
+                "event_id": "evt_bad",
+                "event_name": "visit",
+                "timestamp": "not-a-timestamp",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_good",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u2",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+        ]
+
+        rows = aggregate_conversion_metrics(events)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["visits"], 1)
+
+        backfill_rows = backfill_conversion_metrics(events, "2026-03-05", "2026-03-05")
+        self.assertEqual(len(backfill_rows), 1)
+        self.assertEqual(backfill_rows[0]["visits"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

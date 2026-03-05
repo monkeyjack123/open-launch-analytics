@@ -8,8 +8,11 @@ from .events import normalize_event
 CONVERSION_EVENT_NAMES = {"visit", "signup", "activation"}
 
 
-def _parse_date(value: str) -> str:
-    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+def _parse_date(value: str) -> str | None:
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
     return dt.date().isoformat()
 
 
@@ -34,6 +37,9 @@ def aggregate_conversion_metrics(events: list[dict[str, Any]]) -> list[dict[str,
             continue
 
         day = _parse_date(timestamp)
+        if day is None:
+            continue
+
         source = event["utm_source"]
         campaign = event["utm_campaign"]
         key = (day, source, campaign)
@@ -81,6 +87,8 @@ def backfill_conversion_metrics(
             continue
 
         day = _parse_date(timestamp)
+        if day is None:
+            continue
         if start_date <= day <= end_date:
             filtered.append(event)
 
