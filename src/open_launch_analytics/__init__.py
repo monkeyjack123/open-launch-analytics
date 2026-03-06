@@ -7,6 +7,7 @@ from .events import normalize_event, validate_event
 from .ingest import ingest_event
 from .metrics import aggregate_conversion_metrics, backfill_conversion_metrics
 from .quality import build_data_quality_report, build_health_status
+from .sample_data import build_sample_events, sample_events_to_ndjson
 
 __all__ = [
     "normalize_event",
@@ -20,4 +21,6 @@ __all__ = [
     "validate_api_key",
     "build_data_quality_report",
     "build_health_status",
+    "build_sample_events",
+    "sample_events_to_ndjson",
 ]

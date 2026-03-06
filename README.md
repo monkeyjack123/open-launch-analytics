@@ -59,10 +59,20 @@ Added MVP data-quality + health reporting helpers for backlog **Issue #9**:
 - tests for healthy/degraded thresholds and empty dataset behavior
 - observability contract docs in `docs/data-quality-health.md`
 
+Added sample event generator docs + helper utilities for backlog **Issue #10**:
+
+- `build_sample_events(users=..., start_at=...)` creates deterministic demo funnel events
+- `sample_events_to_ndjson(events)` emits line-delimited JSON for curl/httpie ingestion trials
+- tests for deterministic event generation and NDJSON serialization
+- quickstart usage contract docs in `docs/sample-events.md`
+
 ## Quickstart
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+# generate demo NDJSON payload
+PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_sample_events, sample_events_to_ndjson; print(sample_events_to_ndjson(build_sample_events(users=2)))"
 ```
 
 ## Repo layout
@@ -73,12 +83,14 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
 - `src/open_launch_analytics/metrics.py` — conversion metric aggregation + backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `src/open_launch_analytics/quality.py` — data-quality + health summaries
+- `src/open_launch_analytics/sample_data.py` — deterministic sample event generation helpers
 - `tests/test_events.py` — event contract tests
 - `tests/test_auth.py` — API key auth tests
 - `tests/test_attribution.py` — attribution tests
 - `tests/test_metrics.py` — conversion metric tests
 - `tests/test_cohorts.py` — cohort aggregation tests
 - `tests/test_quality.py` — quality/health tests
+- `tests/test_sample_data.py` — sample data helper tests
 - `docs/event-schema.md` — ingestion contract
 - `docs/api-key-auth.md` — API key auth contract
 - `docs/first-touch-attribution.md` — first-touch contract
@@ -86,3 +98,4 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
 - `docs/conversion-metrics.md` — conversion pipeline contract
 - `docs/basic-cohorts.md` — cohort aggregation contract
 - `docs/data-quality-health.md` — data quality + health contract
+- `docs/sample-events.md` — sample event generation and NDJSON usage
