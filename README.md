@@ -59,6 +59,13 @@ Added MVP data-quality + health reporting helpers for backlog **Issue #9**:
 - tests for healthy/degraded thresholds and empty dataset behavior
 - observability contract docs in `docs/data-quality-health.md`
 
+Added ingestion batch + throughput utilities for backlog **Issue #2** throughput validation:
+
+- `ingest_batch(payloads, ...)` returns per-event envelopes with aggregate accepted/rejected counts
+- `measure_ingest_throughput(payloads, repeats=...)` provides a lightweight events/second benchmark for MVP load sanity checks
+- tests for mixed batch status and throughput reporting
+- ingestion batch + throughput contract docs in `docs/ingestion-throughput.md`
+
 Added sample event generator docs + helper utilities for backlog **Issue #10**:
 
 - `build_sample_events(users=..., start_at=...)` creates deterministic demo funnel events
@@ -83,6 +90,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `src/open_launch_analytics/metrics.py` — conversion metric aggregation + backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `src/open_launch_analytics/quality.py` — data-quality + health summaries
+- `src/open_launch_analytics/ingest.py` — single-event ingest envelope + batch/throughput helpers
 - `src/open_launch_analytics/sample_data.py` — deterministic sample event generation helpers
 - `tests/test_events.py` — event contract tests
 - `tests/test_auth.py` — API key auth tests
@@ -90,6 +98,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `tests/test_metrics.py` — conversion metric tests
 - `tests/test_cohorts.py` — cohort aggregation tests
 - `tests/test_quality.py` — quality/health tests
+- `tests/test_ingest.py` — ingest envelope + batch/throughput tests
 - `tests/test_sample_data.py` — sample data helper tests
 - `docs/event-schema.md` — ingestion contract
 - `docs/api-key-auth.md` — API key auth contract
@@ -98,4 +107,5 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `docs/conversion-metrics.md` — conversion pipeline contract
 - `docs/basic-cohorts.md` — cohort aggregation contract
 - `docs/data-quality-health.md` — data quality + health contract
+- `docs/ingestion-throughput.md` — batch ingest and throughput-check contract
 - `docs/sample-events.md` — sample event generation and NDJSON usage

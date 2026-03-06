@@ -1,6 +1,10 @@
 import unittest
 
-from open_launch_analytics.ingest import ingest_event
+from open_launch_analytics.ingest import (
+    ingest_batch,
+    ingest_event,
+    measure_ingest_throughput,
+)
 
 
 class IngestEventTests(unittest.TestCase):
@@ -83,6 +87,54 @@ class IngestEventTests(unittest.TestCase):
         error_fields = {e["field"] for e in result["errors"]}
         self.assertIn("event_name", error_fields)
         self.assertIn("timestamp", error_fields)
+
+    def test_ingest_batch_returns_multi_status_summary(self):
+        payloads = [
+            {
+                "event_id": "evt_200",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T11:00:00Z",
+                "user_id": "user_200",
+            },
+            {
+                "event_id": "evt_201",
+                "timestamp": "invalid",
+                "user_id": "user_201",
+            },
+        ]
+
+        result = ingest_batch(payloads)
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["status"], 207)
+        self.assertEqual(result["total"], 2)
+        self.assertEqual(result["accepted"], 1)
+        self.assertEqual(result["rejected"], 1)
+        self.assertEqual(len(result["results"]), 2)
+
+    def test_measure_ingest_throughput_reports_basic_stats(self):
+        payloads = [
+            {
+                "event_id": "evt_300",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T12:00:00Z",
+                "user_id": "user_300",
+            },
+            {
+                "event_id": "evt_301",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T12:01:00Z",
+                "user_id": "user_301",
+            },
+        ]
+
+        result = measure_ingest_throughput(payloads, repeats=3)
+
+        self.assertEqual(result["processed_events"], 6)
+        self.assertGreater(result["elapsed_seconds"], 0)
+        self.assertGreater(result["events_per_second"], 0)
+        self.assertIsNotNone(result["last_batch"])
+        self.assertEqual(result["last_batch"]["status"], 202)
 
 
 if __name__ == "__main__":
