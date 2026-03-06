@@ -6,6 +6,7 @@ from .cohorts import build_signup_cohorts
 from .events import normalize_event, validate_event
 from .ingest import ingest_event
 from .metrics import aggregate_conversion_metrics, backfill_conversion_metrics
+from .quality import build_data_quality_report, build_health_status
 
 __all__ = [
     "normalize_event",
@@ -17,4 +18,6 @@ __all__ = [
     "backfill_conversion_metrics",
     "build_signup_cohorts",
     "validate_api_key",
+    "build_data_quality_report",
+    "build_health_status",
 ]

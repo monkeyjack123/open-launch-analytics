@@ -52,6 +52,13 @@ Added minimal API key auth guardrails for backlog **Issue #8**:
 - unit tests for auth helper + ingest auth flows
 - auth contract docs in `docs/api-key-auth.md`
 
+Added MVP data-quality + health reporting helpers for backlog **Issue #9**:
+
+- `build_data_quality_report(events)` computes invalid payload and missing-UTM rates
+- `build_health_status(events, max_invalid_payload_rate=...)` returns healthy/degraded envelope for `/health`-style APIs
+- tests for healthy/degraded thresholds and empty dataset behavior
+- observability contract docs in `docs/data-quality-health.md`
+
 ## Quickstart
 
 ```bash
@@ -65,14 +72,17 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
 - `src/open_launch_analytics/metrics.py` — conversion metric aggregation + backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
+- `src/open_launch_analytics/quality.py` — data-quality + health summaries
 - `tests/test_events.py` — event contract tests
 - `tests/test_auth.py` — API key auth tests
 - `tests/test_attribution.py` — attribution tests
 - `tests/test_metrics.py` — conversion metric tests
 - `tests/test_cohorts.py` — cohort aggregation tests
+- `tests/test_quality.py` — quality/health tests
 - `docs/event-schema.md` — ingestion contract
 - `docs/api-key-auth.md` — API key auth contract
 - `docs/first-touch-attribution.md` — first-touch contract
 - `docs/last-touch-attribution.md` — last-touch contract
 - `docs/conversion-metrics.md` — conversion pipeline contract
 - `docs/basic-cohorts.md` — cohort aggregation contract
+- `docs/data-quality-health.md` — data quality + health contract
