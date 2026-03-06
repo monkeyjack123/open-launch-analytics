@@ -44,6 +44,14 @@ Added basic cohort aggregation backend for backlog **Issue #7**:
 - tests for day-offset math and segmentation filters
 - cohort contract docs in `docs/basic-cohorts.md`
 
+Added minimal API key auth guardrails for backlog **Issue #8**:
+
+- `validate_api_key(api_key, valid_api_keys)` validates missing/invalid/valid keys with API-ready error envelopes
+- `ingest_event(..., api_key=..., valid_api_keys=...)` now enforces auth when key allowlist is provided
+- auth failure semantics aligned to `401` (missing key) and `403` (invalid key)
+- unit tests for auth helper + ingest auth flows
+- auth contract docs in `docs/api-key-auth.md`
+
 ## Quickstart
 
 ```bash
@@ -53,14 +61,17 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_*.py' -v
 ## Repo layout
 
 - `src/open_launch_analytics/events.py` — validation + normalization logic
+- `src/open_launch_analytics/auth.py` — API key validation helper
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
 - `src/open_launch_analytics/metrics.py` — conversion metric aggregation + backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `tests/test_events.py` — event contract tests
+- `tests/test_auth.py` — API key auth tests
 - `tests/test_attribution.py` — attribution tests
 - `tests/test_metrics.py` — conversion metric tests
 - `tests/test_cohorts.py` — cohort aggregation tests
 - `docs/event-schema.md` — ingestion contract
+- `docs/api-key-auth.md` — API key auth contract
 - `docs/first-touch-attribution.md` — first-touch contract
 - `docs/last-touch-attribution.md` — last-touch contract
 - `docs/conversion-metrics.md` — conversion pipeline contract
