@@ -7,6 +7,7 @@ from open_launch_analytics.metrics import (
     backfill_conversion_metrics,
     build_dashboard_filter_options,
     build_funnel_breakdown,
+    build_funnel_timeseries,
     resolve_date_range,
     summarize_campaign_efficiency,
     summarize_funnel,
@@ -294,6 +295,79 @@ class ConversionMetricsTests(unittest.TestCase):
         rows = build_funnel_breakdown(events, sort_by="not_a_field")
         self.assertEqual(rows[0]["utm_source"], "a")
         self.assertEqual(rows[0]["visits"], 2)
+
+    def test_build_funnel_timeseries_supports_filters_and_zero_fill(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "LinkedIn",
+                "utm_campaign": "Spring",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T08:30:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "activation",
+                "timestamp": "2026-03-07T09:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_4",
+                "event_name": "visit",
+                "timestamp": "2026-03-06T09:00:00Z",
+                "user_id": "u2",
+                "utm_source": "reddit",
+                "utm_campaign": "retargeting",
+            },
+        ]
+
+        rows = build_funnel_timeseries(
+            events,
+            start_date="2026-03-05",
+            end_date="2026-03-07",
+            utm_source="linkedin",
+            utm_campaign="spring",
+        )
+
+        self.assertEqual([row["date"] for row in rows], ["2026-03-05", "2026-03-06", "2026-03-07"])
+        self.assertEqual(rows[0]["visits"], 1)
+        self.assertEqual(rows[0]["signups"], 1)
+        self.assertEqual(rows[0]["activation_rate"], 0.0)
+        self.assertEqual(rows[1]["visits"], 0)
+        self.assertIsNone(rows[1]["signup_rate"])
+        self.assertEqual(rows[2]["activations"], 1)
+
+    def test_build_funnel_timeseries_without_date_bounds_only_returns_event_days(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "signup",
+                "timestamp": "2026-03-07T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+            },
+        ]
+
+        rows = build_funnel_timeseries(events)
+        self.assertEqual([row["date"] for row in rows], ["2026-03-05", "2026-03-07"])
 
     def test_build_dashboard_filter_options_counts_and_sorts(self):
         events = [

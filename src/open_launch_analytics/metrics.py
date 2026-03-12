@@ -284,6 +284,90 @@ def build_funnel_breakdown(
     return rows
 
 
+def build_funnel_timeseries(
+    events: list[dict[str, Any]],
+    start_date: str | None = None,
+    end_date: str | None = None,
+    utm_source: str | None = None,
+    utm_campaign: str | None = None,
+) -> list[dict[str, Any]]:
+    """Build daily funnel rows for chart-friendly dashboard timeseries rendering.
+
+    Returns one row per day with deterministic ordering and optional zero-filled
+    gaps when both ``start_date`` and ``end_date`` are provided.
+    """
+
+    normalized_start_date, normalized_end_date = _validate_optional_date_filters(start_date, end_date)
+    normalized_source = utm_source.strip().lower() if isinstance(utm_source, str) else None
+    normalized_campaign = utm_campaign.strip().lower() if isinstance(utm_campaign, str) else None
+
+    buckets: dict[str, dict[str, Any]] = {}
+
+    for raw_event in events:
+        event = normalize_event(raw_event)
+        event_name = event.get("event_name")
+        timestamp = event.get("timestamp")
+
+        if not isinstance(event_name, str) or event_name not in CONVERSION_EVENT_NAMES:
+            continue
+        if not isinstance(timestamp, str) or not timestamp.strip():
+            continue
+
+        day = _parse_date(timestamp)
+        if day is None or not _within_date_range(day, normalized_start_date, normalized_end_date):
+            continue
+
+        source = event["utm_source"]
+        campaign = event["utm_campaign"]
+
+        if normalized_source is not None and source != normalized_source:
+            continue
+        if normalized_campaign is not None and campaign != normalized_campaign:
+            continue
+
+        if day not in buckets:
+            buckets[day] = {
+                "date": day,
+                "visits": 0,
+                "signups": 0,
+                "activations": 0,
+            }
+
+        if event_name == "visit":
+            buckets[day]["visits"] += 1
+        elif event_name == "signup":
+            buckets[day]["signups"] += 1
+        elif event_name == "activation":
+            buckets[day]["activations"] += 1
+
+    if normalized_start_date is not None and normalized_end_date is not None:
+        current = date.fromisoformat(normalized_start_date)
+        end = date.fromisoformat(normalized_end_date)
+        while current <= end:
+            day = current.isoformat()
+            buckets.setdefault(
+                day,
+                {
+                    "date": day,
+                    "visits": 0,
+                    "signups": 0,
+                    "activations": 0,
+                },
+            )
+            current += timedelta(days=1)
+
+    rows = list(buckets.values())
+    for row in rows:
+        visits = row["visits"]
+        signups = row["signups"]
+        activations = row["activations"]
+        row["signup_rate"] = (signups / visits) if visits else None
+        row["activation_rate"] = (activations / signups) if signups else None
+
+    rows.sort(key=lambda row: row["date"])
+    return rows
+
+
 def build_dashboard_filter_options(
     events: list[dict[str, Any]],
     start_date: str | None = None,

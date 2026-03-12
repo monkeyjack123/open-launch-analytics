@@ -160,6 +160,14 @@ Added campaign efficiency prioritization helper for dashboard planning:
 - tests cover ranking behavior, min-visits filtering, and validation errors
 - API contract docs in `docs/campaign-efficiency.md`
 
+Added daily funnel timeseries helper for backlog **Issue #6** chart wiring:
+
+- `build_funnel_timeseries(...)` returns per-day `visits/signups/activations` rows for chart-ready dashboard trends
+- supports date/source/campaign filters aligned with existing dashboard helpers
+- fills zero-count day gaps when explicit `start_date` + `end_date` are provided for stable chart axes
+- tests for filter behavior and gap-filling semantics
+- API contract docs in `docs/funnel-timeseries.md`
+
 ## Quickstart
 
 ```bash
@@ -174,7 +182,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `src/open_launch_analytics/events.py` — validation + normalization logic
 - `src/open_launch_analytics/auth.py` — API key validation helper
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
-- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns, campaign efficiency summaries, dashboard filter options, source engagement summaries, date-preset resolution, and backfill helpers
+- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns/timeseries, campaign efficiency summaries, dashboard filter options, source engagement summaries, date-preset resolution, and backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `src/open_launch_analytics/quality.py` — data-quality, attribution-completeness, and health summaries
 - `src/open_launch_analytics/ingest.py` — single-event ingest envelope + batch/throughput helpers
@@ -194,6 +202,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `docs/conversion-metrics.md` — conversion pipeline contract
 - `docs/funnel-summary.md` — dashboard funnel card summary contract
 - `docs/funnel-breakdown.md` — dashboard source/campaign breakdown table contract
+- `docs/funnel-timeseries.md` — dashboard daily funnel timeseries contract
 - `docs/date-range-presets.md` — dashboard 7d/30d/custom date-range resolver contract
 - `docs/basic-cohorts.md` — cohort aggregation contract
 - `docs/data-quality-health.md` — data quality + health contract

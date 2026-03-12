@@ -63,7 +63,8 @@
 - Added `build_dashboard_filter_options(...)` to provide deterministic source/campaign dropdown options with event-volume ordering for UI controls.
 - Added tests for filter-option count/sort behavior and date-validation guardrails.
 - Added backend contract docs for dashboard control wiring (`docs/dashboard-filter-options.md`).
-- Remaining: ship UI rendering layer and wire interactive controls to summary/breakdown/date-range/filter-option helpers.
+- Added `build_funnel_timeseries(...)` helper to provide day-level visits/signups/activations rows with optional zero-fill between explicit date bounds for chart rendering.
+- Remaining: ship UI rendering layer and wire interactive controls to summary/breakdown/date-range/filter-option/timeseries helpers.
 
 ### Issue 7 — Basic cohort view (D0/D1/D7)
 **Type:** Frontend/Data
