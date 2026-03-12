@@ -5,6 +5,7 @@ from datetime import date
 from open_launch_analytics.metrics import (
     aggregate_conversion_metrics,
     backfill_conversion_metrics,
+    build_dashboard_filter_options,
     build_funnel_breakdown,
     resolve_date_range,
     summarize_funnel,
@@ -292,6 +293,57 @@ class ConversionMetricsTests(unittest.TestCase):
         rows = build_funnel_breakdown(events, sort_by="not_a_field")
         self.assertEqual(rows[0]["utm_source"], "a")
         self.assertEqual(rows[0]["visits"], 2)
+
+    def test_build_dashboard_filter_options_counts_and_sorts(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "LinkedIn",
+                "utm_campaign": "Spring",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T08:30:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T09:00:00Z",
+                "user_id": "u2",
+                "utm_source": "reddit",
+                "utm_campaign": "Retargeting",
+            },
+            {
+                "event_id": "evt_4",
+                "event_name": "activation",
+                "timestamp": "2026-03-06T09:00:00Z",
+                "user_id": "u2",
+                "utm_source": "reddit",
+                "utm_campaign": "retargeting",
+            },
+        ]
+
+        options = build_dashboard_filter_options(
+            events,
+            start_date="2026-03-05",
+            end_date="2026-03-05",
+        )
+
+        self.assertEqual(options["utm_source"][0], {"value": "linkedin", "label": "linkedin", "events": 2})
+        self.assertEqual(options["utm_source"][1], {"value": "reddit", "label": "reddit", "events": 1})
+        self.assertEqual(options["utm_campaign"][0], {"value": "spring", "label": "spring", "events": 2})
+        self.assertEqual(options["utm_campaign"][1], {"value": "retargeting", "label": "retargeting", "events": 1})
+
+    def test_build_dashboard_filter_options_validates_dates(self):
+        with self.assertRaises(ValueError):
+            build_dashboard_filter_options([], start_date="2026/03/05", end_date="2026-03-06")
 
     def test_funnel_helpers_validate_optional_date_filters(self):
         events = [

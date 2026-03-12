@@ -8,6 +8,7 @@ from .ingest import ingest_batch, ingest_event, measure_ingest_throughput
 from .metrics import (
     aggregate_conversion_metrics,
     backfill_conversion_metrics,
+    build_dashboard_filter_options,
     build_funnel_breakdown,
     resolve_date_range,
     summarize_funnel,
@@ -32,6 +33,7 @@ __all__ = [
     "backfill_conversion_metrics",
     "summarize_funnel",
     "build_funnel_breakdown",
+    "build_dashboard_filter_options",
     "resolve_date_range",
     "build_signup_cohorts",
     "validate_api_key",

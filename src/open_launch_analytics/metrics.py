@@ -284,6 +284,58 @@ def build_funnel_breakdown(
     return rows
 
 
+def build_dashboard_filter_options(
+    events: list[dict[str, Any]],
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """Build deterministic source/campaign filter options for dashboard controls.
+
+    Returns option rows with normalized labels and volume counts so UI clients can
+    populate filter dropdowns with stable ordering.
+    """
+
+    normalized_start_date, normalized_end_date = _validate_optional_date_filters(start_date, end_date)
+
+    source_counts: dict[str, int] = {}
+    campaign_counts: dict[str, int] = {}
+
+    for raw_event in events:
+        event = normalize_event(raw_event)
+        event_name = event.get("event_name")
+        timestamp = event.get("timestamp")
+
+        if not isinstance(event_name, str) or event_name not in CONVERSION_EVENT_NAMES:
+            continue
+        if not isinstance(timestamp, str) or not timestamp.strip():
+            continue
+
+        day = _parse_date(timestamp)
+        if day is None or not _within_date_range(day, normalized_start_date, normalized_end_date):
+            continue
+
+        source = event["utm_source"]
+        campaign = event["utm_campaign"]
+
+        source_counts[source] = source_counts.get(source, 0) + 1
+        campaign_counts[campaign] = campaign_counts.get(campaign, 0) + 1
+
+    source_options = [
+        {"value": source, "label": source, "events": count}
+        for source, count in source_counts.items()
+    ]
+    campaign_options = [
+        {"value": campaign, "label": campaign, "events": count}
+        for campaign, count in campaign_counts.items()
+    ]
+
+    source_options.sort(key=lambda row: (-row["events"], row["value"]))
+    campaign_options.sort(key=lambda row: (-row["events"], row["value"]))
+
+    return {
+        "utm_source": source_options,
+        "utm_campaign": campaign_options,
+    }
 
 
 def summarize_source_engagement(

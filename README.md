@@ -136,6 +136,14 @@ Added source engagement summary helper for funnel quality monitoring:
 - tests cover unique-user grouping and missing-identity edge cases
 - API contract docs in `docs/source-engagement.md`
 
+Added dashboard filter-option helper for backlog **Issue #6** control wiring:
+
+- `build_dashboard_filter_options(events, start_date=None, end_date=None)` returns normalized `utm_source` and `utm_campaign` option rows with event counts
+- option rows are deterministically sorted by usage volume then value for stable dropdown behavior
+- validates optional date filters and reuses dashboard date-bound semantics
+- tests cover count/sort behavior and invalid-date validation
+- API contract docs in `docs/dashboard-filter-options.md`
+
 ## Quickstart
 
 ```bash
@@ -150,7 +158,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `src/open_launch_analytics/events.py` — validation + normalization logic
 - `src/open_launch_analytics/auth.py` — API key validation helper
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
-- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns, source engagement summaries, date-preset resolution, and backfill helpers
+- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns, dashboard filter options, source engagement summaries, date-preset resolution, and backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `src/open_launch_analytics/quality.py` — data-quality, attribution-completeness, and health summaries
 - `src/open_launch_analytics/ingest.py` — single-event ingest envelope + batch/throughput helpers
@@ -176,3 +184,4 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `docs/ingestion-throughput.md` — batch ingest and throughput-check contract
 - `docs/sample-events.md` — sample event generation and NDJSON usage
 - `docs/source-engagement.md` — source-level engagement and bounce-rate summary contract
+- `docs/dashboard-filter-options.md` — dashboard source/campaign filter option contract
