@@ -11,6 +11,7 @@ from .metrics import (
     build_dashboard_filter_options,
     build_funnel_breakdown,
     resolve_date_range,
+    summarize_campaign_efficiency,
     summarize_funnel,
 )
 from .quality import (
@@ -36,6 +37,7 @@ __all__ = [
     "build_funnel_breakdown",
     "build_dashboard_filter_options",
     "resolve_date_range",
+    "summarize_campaign_efficiency",
     "build_signup_cohorts",
     "validate_api_key",
     "validate_api_key_hash",

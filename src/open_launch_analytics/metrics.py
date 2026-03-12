@@ -394,6 +394,67 @@ def summarize_source_engagement(
 
     rows.sort(key=lambda row: (-row["visitors"], row["utm_source"]))
     return rows
+
+
+def summarize_campaign_efficiency(
+    events: list[dict[str, Any]],
+    start_date: str | None = None,
+    end_date: str | None = None,
+    min_visits: int = 1,
+) -> list[dict[str, Any]]:
+    """Summarize campaign-level conversion efficiency for prioritization.
+
+    Returns per-campaign rows with funnel totals and both conversion rates:
+    - signup_rate = signups / visits
+    - activation_per_signup_rate = activations / signups
+    - activation_per_visit_rate = activations / visits
+    """
+
+    if min_visits < 0:
+        raise ValueError("min_visits must be >= 0")
+
+    rows = build_funnel_breakdown(
+        events,
+        start_date=start_date,
+        end_date=end_date,
+        sort_by="activations",
+        descending=True,
+    )
+
+    campaign_rows: list[dict[str, Any]] = []
+    for row in rows:
+        visits = row["visits"]
+        signups = row["signups"]
+        activations = row["activations"]
+
+        if visits < min_visits:
+            continue
+
+        campaign_rows.append(
+            {
+                "utm_source": row["utm_source"],
+                "utm_campaign": row["utm_campaign"],
+                "visits": visits,
+                "signups": signups,
+                "activations": activations,
+                "signup_rate": row["signup_rate"],
+                "activation_per_signup_rate": row["activation_rate"],
+                "activation_per_visit_rate": (activations / visits) if visits else None,
+            }
+        )
+
+    campaign_rows.sort(
+        key=lambda item: (
+            -(item["activation_per_visit_rate"] or -1),
+            -item["activations"],
+            -item["visits"],
+            item["utm_source"],
+            item["utm_campaign"],
+        )
+    )
+    return campaign_rows
+
+
 def backfill_conversion_metrics(
     events: list[dict[str, Any]],
     start_date: str,

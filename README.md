@@ -151,6 +151,15 @@ Added dashboard filter-option helper for backlog **Issue #6** control wiring:
 - tests cover count/sort behavior and invalid-date validation
 - API contract docs in `docs/dashboard-filter-options.md`
 
+Added campaign efficiency prioritization helper for dashboard planning:
+
+- `summarize_campaign_efficiency(events, start_date=None, end_date=None, min_visits=1)` returns campaign rows with signup and activation efficiency rates
+- exposes `activation_per_signup_rate` and `activation_per_visit_rate` to rank campaign quality beyond raw volume
+- deterministic sorting favors higher activation-per-visit outcomes, then volume tie-breakers
+- supports minimum-volume filtering via `min_visits` for cleaner planning lists
+- tests cover ranking behavior, min-visits filtering, and validation errors
+- API contract docs in `docs/campaign-efficiency.md`
+
 ## Quickstart
 
 ```bash
@@ -165,7 +174,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `src/open_launch_analytics/events.py` — validation + normalization logic
 - `src/open_launch_analytics/auth.py` — API key validation helper
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
-- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns, dashboard filter options, source engagement summaries, date-preset resolution, and backfill helpers
+- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns, campaign efficiency summaries, dashboard filter options, source engagement summaries, date-preset resolution, and backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `src/open_launch_analytics/quality.py` — data-quality, attribution-completeness, and health summaries
 - `src/open_launch_analytics/ingest.py` — single-event ingest envelope + batch/throughput helpers
@@ -192,3 +201,4 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `docs/sample-events.md` — sample event generation and NDJSON usage
 - `docs/source-engagement.md` — source-level engagement and bounce-rate summary contract
 - `docs/dashboard-filter-options.md` — dashboard source/campaign filter option contract
+- `docs/campaign-efficiency.md` — campaign-level efficiency ranking contract

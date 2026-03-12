@@ -8,6 +8,7 @@ from open_launch_analytics.metrics import (
     build_dashboard_filter_options,
     build_funnel_breakdown,
     resolve_date_range,
+    summarize_campaign_efficiency,
     summarize_funnel,
     summarize_source_engagement,
 )
@@ -390,6 +391,84 @@ class ConversionMetricsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             resolve_date_range("90d")
 
+
+    def test_summarize_campaign_efficiency_ranks_by_activation_per_visit(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "LinkedIn",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T08:05:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "activation",
+                "timestamp": "2026-03-05T08:10:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_4",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u2",
+                "utm_source": "reddit",
+                "utm_campaign": "retarget",
+            },
+            {
+                "event_id": "evt_5",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:10:00Z",
+                "user_id": "u3",
+                "utm_source": "reddit",
+                "utm_campaign": "retarget",
+            },
+            {
+                "event_id": "evt_6",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T08:15:00Z",
+                "user_id": "u2",
+                "utm_source": "reddit",
+                "utm_campaign": "retarget",
+            },
+        ]
+
+        rows = summarize_campaign_efficiency(events)
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["utm_source"], "linkedin")
+        self.assertEqual(rows[0]["activation_per_visit_rate"], 1.0)
+        self.assertEqual(rows[1]["utm_source"], "reddit")
+        self.assertEqual(rows[1]["activation_per_visit_rate"], 0.0)
+
+    def test_summarize_campaign_efficiency_respects_min_visits_and_validates(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            }
+        ]
+
+        rows = summarize_campaign_efficiency(events, min_visits=2)
+        self.assertEqual(rows, [])
+
+        with self.assertRaises(ValueError):
+            summarize_campaign_efficiency(events, min_visits=-1)
 
     def test_summarize_source_engagement_groups_unique_visitors(self):
         events = [
