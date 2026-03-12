@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Iterable
 
 from .events import normalize_event, validate_event
 
 
 TRACKED_UTM_FIELDS = ("utm_source", "utm_medium", "utm_campaign")
+DEFAULT_CONVERSION_EVENTS = frozenset({"signup", "activation"})
 
 
 def build_data_quality_report(events: list[dict[str, Any]]) -> dict[str, Any]:
@@ -42,6 +43,116 @@ def build_data_quality_report(events: list[dict[str, Any]]) -> dict[str, Any]:
         "invalid_payload_rate": invalid_payload_rate,
         "missing_utm_events": missing_utm_events,
         "missing_utm_rate": missing_utm_rate,
+    }
+
+
+def build_attribution_completeness_report(
+    events: list[dict[str, Any]],
+    *,
+    conversion_events: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Measure attribution-tag completeness for conversion events.
+
+    Counts only valid payloads whose ``event_name`` is in ``conversion_events``
+    (defaults to signup + activation) and reports how many still land in fallback
+    ``direct/unknown`` UTM buckets after normalization.
+    """
+
+    allowed_events = {
+        str(name).strip().lower()
+        for name in (conversion_events if conversion_events is not None else DEFAULT_CONVERSION_EVENTS)
+        if str(name).strip()
+    }
+    if not allowed_events:
+        raise ValueError("conversion_events must contain at least one non-empty event name")
+
+    conversions = 0
+    unattributed_conversions = 0
+
+    for event in events:
+        if validate_event(event):
+            continue
+
+        normalized = normalize_event(event)
+        if normalized["event_name"] not in allowed_events:
+            continue
+
+        conversions += 1
+        if any(normalized[field] in {"direct", "unknown"} for field in TRACKED_UTM_FIELDS):
+            unattributed_conversions += 1
+
+    attributed_conversions = conversions - unattributed_conversions
+    attribution_match_rate = (attributed_conversions / conversions) if conversions else None
+
+    return {
+        "conversion_events": sorted(allowed_events),
+        "conversions": conversions,
+        "attributed_conversions": attributed_conversions,
+        "unattributed_conversions": unattributed_conversions,
+        "attribution_match_rate": attribution_match_rate,
+    }
+
+
+def build_ingestion_slo_report(
+    samples: list[dict[str, Any]],
+    *,
+    max_error_rate: float = 0.005,
+    max_p95_latency_ms: float = 500.0,
+) -> dict[str, Any]:
+    """Summarize ingestion SLO posture from request-level telemetry samples.
+
+    Expected sample keys:
+    - ``ok`` (bool): whether request succeeded
+    - ``latency_ms`` (int/float): request latency in milliseconds
+
+    Invalid rows (missing/negative/non-numeric latency) are ignored for latency
+    percentile math but still counted under ``invalid_samples`` for visibility.
+    """
+
+    total = len(samples)
+    errors = 0
+    invalid_samples = 0
+    latencies: list[float] = []
+
+    for sample in samples:
+        if not sample.get("ok", False):
+            errors += 1
+
+        latency_raw = sample.get("latency_ms")
+        if isinstance(latency_raw, (int, float)) and latency_raw >= 0:
+            latencies.append(float(latency_raw))
+        else:
+            invalid_samples += 1
+
+    error_rate = (errors / total) if total else None
+
+    p95_latency_ms = None
+    if latencies:
+        sorted_latencies = sorted(latencies)
+        # nearest-rank percentile with deterministic index math
+        rank = max(1, int((0.95 * len(sorted_latencies)) + 0.999999))
+        p95_latency_ms = sorted_latencies[rank - 1]
+
+    slo_ok = True
+    if error_rate is not None and error_rate > max_error_rate:
+        slo_ok = False
+    if p95_latency_ms is not None and p95_latency_ms > max_p95_latency_ms:
+        slo_ok = False
+
+    return {
+        "ok": slo_ok,
+        "status": "healthy" if slo_ok else "degraded",
+        "samples": total,
+        "invalid_samples": invalid_samples,
+        "errors": errors,
+        "error_rate": error_rate,
+        "latency": {
+            "p95_ms": p95_latency_ms,
+        },
+        "thresholds": {
+            "max_error_rate": max_error_rate,
+            "max_p95_latency_ms": max_p95_latency_ms,
+        },
     }
 
 

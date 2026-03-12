@@ -44,6 +44,13 @@ Added basic cohort aggregation backend for backlog **Issue #7**:
 - tests for day-offset math and segmentation filters
 - cohort contract docs in `docs/basic-cohorts.md`
 
+Added cohort matrix envelope helper for backlog **Issue #7** UI wiring:
+
+- `build_cohort_matrix(...)` returns dashboard-ready `columns`, `legend`, `rows`, and weighted `totals`
+- validates/normalizes day offsets for deterministic matrix rendering
+- tests for matrix metadata and totals/footer math
+- cohort contract docs updated with matrix semantics and day-offset constraints
+
 Added minimal API key auth guardrails for backlog **Issue #8**:
 
 - `validate_api_key(api_key, valid_api_keys)` validates missing/invalid/valid keys with API-ready error envelopes
@@ -51,6 +58,13 @@ Added minimal API key auth guardrails for backlog **Issue #8**:
 - auth failure semantics aligned to `401` (missing key) and `403` (invalid key)
 - unit tests for auth helper + ingest auth flows
 - auth contract docs in `docs/api-key-auth.md`
+
+Extended API key management for backlog **Issue #8** owner lifecycle flows:
+
+- added `ApiKeyManager` for `create_key`, `rotate_key`, `revoke_key`, and metadata-only `list_keys`
+- key validation now supports digest-based checks via `validate_api_key_hash(...)` to avoid plaintext key storage
+- added tests confirming rotate invalidates prior keys, revoke blocks access, and list APIs do not leak secrets
+- auth docs updated with key lifecycle contract details
 
 Added MVP data-quality + health reporting helpers for backlog **Issue #9**:
 
@@ -73,6 +87,45 @@ Added sample event generator docs + helper utilities for backlog **Issue #10**:
 - tests for deterministic event generation and NDJSON serialization
 - quickstart usage contract docs in `docs/sample-events.md`
 
+Added dashboard top-card funnel summary utility for backlog **Issue #6**:
+
+- `summarize_funnel(events, start_date=None, end_date=None, utm_source=None, utm_campaign=None)` computes filter-aware totals for `visits/signups/activations`
+- computes dashboard card rates (`signup_rate`, `activation_rate`) from filtered events
+- supports date range and normalized UTM source/campaign filters
+- tests for filtered and edge-case rate behavior
+- API contract docs in `docs/funnel-summary.md`
+
+Added dashboard breakdown table backend utility for backlog **Issue #6**:
+
+- `build_funnel_breakdown(...)` returns source/campaign grouped rows for table rendering
+- supports date/source/campaign filters and deterministic sorting (`visits/signups/activations/rates/source/campaign`)
+- supports optional `limit` for top-N table interactions
+- tests for filter/sort/limit behavior and invalid sort fallback
+- API contract docs in `docs/funnel-breakdown.md`
+
+Added dashboard date-preset resolver utility for backlog **Issue #6** filter UX:
+
+- `resolve_date_range(preset, ...)` resolves inclusive date bounds for `7d`, `30d`, and validated `custom` ranges
+- deterministic behavior with injectable `today` for testability
+- explicit validation for unsupported presets and invalid custom windows
+- tests for 7d/30d range math and custom/error paths
+- API contract docs in `docs/date-range-presets.md`
+
+Added conversion attribution completeness monitor helper for backlog **Issue #9** KPI visibility:
+
+- `build_attribution_completeness_report(events, conversion_events=None)` measures conversion attribution coverage using normalized UTM fallback detection
+- reports `conversions`, `attributed_conversions`, `unattributed_conversions`, and `attribution_match_rate`
+- defaults to conversion events `signup` + `activation`, with optional custom conversion event sets
+- tests for default behavior, custom conversion events, and validation errors
+- docs expanded in `docs/data-quality-health.md`
+
+Added ingestion SLO monitor helper for backlog **Issue #9** observability completeness:
+
+- `build_ingestion_slo_report(samples, max_error_rate=..., max_p95_latency_ms=...)` evaluates request-level error-rate + p95 latency against configurable thresholds
+- report includes `samples`, `errors`, `error_rate`, `latency.p95_ms`, and `invalid_samples` for malformed telemetry visibility
+- tests cover degraded latency posture, empty sample behavior, and invalid-latency handling
+- docs expanded in `docs/data-quality-health.md`
+
 ## Quickstart
 
 ```bash
@@ -87,9 +140,9 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `src/open_launch_analytics/events.py` — validation + normalization logic
 - `src/open_launch_analytics/auth.py` — API key validation helper
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
-- `src/open_launch_analytics/metrics.py` — conversion metric aggregation + backfill helpers
+- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, dashboard funnel summaries/breakdowns, date-preset resolution, and backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
-- `src/open_launch_analytics/quality.py` — data-quality + health summaries
+- `src/open_launch_analytics/quality.py` — data-quality, attribution-completeness, and health summaries
 - `src/open_launch_analytics/ingest.py` — single-event ingest envelope + batch/throughput helpers
 - `src/open_launch_analytics/sample_data.py` — deterministic sample event generation helpers
 - `tests/test_events.py` — event contract tests
@@ -105,6 +158,9 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `docs/first-touch-attribution.md` — first-touch contract
 - `docs/last-touch-attribution.md` — last-touch contract
 - `docs/conversion-metrics.md` — conversion pipeline contract
+- `docs/funnel-summary.md` — dashboard funnel card summary contract
+- `docs/funnel-breakdown.md` — dashboard source/campaign breakdown table contract
+- `docs/date-range-presets.md` — dashboard 7d/30d/custom date-range resolver contract
 - `docs/basic-cohorts.md` — cohort aggregation contract
 - `docs/data-quality-health.md` — data quality + health contract
 - `docs/ingestion-throughput.md` — batch ingest and throughput-check contract
