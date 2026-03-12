@@ -8,6 +8,7 @@ from open_launch_analytics.metrics import (
     build_funnel_breakdown,
     resolve_date_range,
     summarize_funnel,
+    summarize_source_engagement,
 )
 
 
@@ -327,6 +328,75 @@ class ConversionMetricsTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             resolve_date_range("90d")
+
+
+    def test_summarize_source_engagement_groups_unique_visitors(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "LinkedIn",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:10:00Z",
+                "user_id": "u2",
+                "utm_source": "linkedin",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T09:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+            },
+            {
+                "event_id": "evt_4",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T09:30:00Z",
+                "user_id": "u3",
+                "utm_source": "reddit",
+            },
+            {
+                "event_id": "evt_5",
+                "event_name": "activation",
+                "timestamp": "2026-03-06T09:30:00Z",
+                "user_id": "u3",
+                "utm_source": "reddit",
+            },
+        ]
+
+        rows = summarize_source_engagement(events, start_date="2026-03-05", end_date="2026-03-05")
+
+        self.assertEqual(len(rows), 2)
+
+        linkedin = next(row for row in rows if row["utm_source"] == "linkedin")
+        self.assertEqual(linkedin["visitors"], 2)
+        self.assertEqual(linkedin["engaged_visitors"], 1)
+        self.assertEqual(linkedin["engagement_rate"], 0.5)
+        self.assertEqual(linkedin["bounce_rate"], 0.5)
+
+        reddit = next(row for row in rows if row["utm_source"] == "reddit")
+        self.assertEqual(reddit["visitors"], 1)
+        self.assertEqual(reddit["engaged_visitors"], 0)
+        self.assertEqual(reddit["engagement_rate"], 0.0)
+        self.assertEqual(reddit["bounce_rate"], 1.0)
+
+    def test_summarize_source_engagement_skips_missing_user_id(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "utm_source": "linkedin",
+            }
+        ]
+
+        rows = summarize_source_engagement(events)
+        self.assertEqual(rows, [])
 
 
 if __name__ == "__main__":

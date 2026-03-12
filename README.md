@@ -128,6 +128,14 @@ Added ingestion SLO monitor helper for backlog **Issue #9** observability comple
 - tests cover degraded latency posture, empty sample behavior, and invalid-latency handling
 - docs expanded in `docs/data-quality-health.md`
 
+Added source engagement summary helper for funnel quality monitoring:
+
+- `summarize_source_engagement(events, start_date=None, end_date=None)` computes per-source unique visitors, engaged visitors, engagement rate, and bounce rate
+- treats `signup` and `activation` as engaged outcomes, with unique-user counting by `user_id`
+- validates optional date filters and ignores events without usable `user_id`
+- tests cover unique-user grouping and missing-identity edge cases
+- API contract docs in `docs/source-engagement.md`
+
 ## Quickstart
 
 ```bash
@@ -142,7 +150,7 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `src/open_launch_analytics/events.py` — validation + normalization logic
 - `src/open_launch_analytics/auth.py` — API key validation helper
 - `src/open_launch_analytics/attribution.py` — first/last-touch attribution logic
-- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, dashboard funnel summaries/breakdowns, date-preset resolution, and backfill helpers
+- `src/open_launch_analytics/metrics.py` — conversion metric aggregation, funnel summaries/breakdowns, source engagement summaries, date-preset resolution, and backfill helpers
 - `src/open_launch_analytics/cohorts.py` — signup cohort aggregation (D0/D1/D7)
 - `src/open_launch_analytics/quality.py` — data-quality, attribution-completeness, and health summaries
 - `src/open_launch_analytics/ingest.py` — single-event ingest envelope + batch/throughput helpers
@@ -167,3 +175,4 @@ PYTHONPATH=src python3 -c "from open_launch_analytics.sample_data import build_s
 - `docs/data-quality-health.md` — data quality + health contract
 - `docs/ingestion-throughput.md` — batch ingest and throughput-check contract
 - `docs/sample-events.md` — sample event generation and NDJSON usage
+- `docs/source-engagement.md` — source-level engagement and bounce-rate summary contract

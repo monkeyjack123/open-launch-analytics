@@ -284,6 +284,64 @@ def build_funnel_breakdown(
     return rows
 
 
+
+
+def summarize_source_engagement(
+    events: list[dict[str, Any]],
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> list[dict[str, Any]]:
+    """Summarize visitor engagement by source using conversion events.
+
+    A visitor is considered *engaged* when they reach signup or activation.
+    Bounce rate is calculated as ``1 - (engaged_visitors / visitors)`` and is
+    ``None`` when there are no visitors for a source bucket.
+    """
+
+    normalized_start_date, normalized_end_date = _validate_optional_date_filters(start_date, end_date)
+
+    per_source_visitors: dict[str, set[str]] = {}
+    per_source_engaged: dict[str, set[str]] = {}
+
+    for raw_event in events:
+        event = normalize_event(raw_event)
+        event_name = event.get("event_name")
+        timestamp = event.get("timestamp")
+        user_id = event.get("user_id")
+
+        if not isinstance(event_name, str) or event_name not in CONVERSION_EVENT_NAMES:
+            continue
+        if not isinstance(timestamp, str) or not timestamp.strip():
+            continue
+        if not isinstance(user_id, str) or not user_id.strip():
+            continue
+
+        day = _parse_date(timestamp)
+        if day is None or not _within_date_range(day, normalized_start_date, normalized_end_date):
+            continue
+
+        source = event["utm_source"]
+        per_source_visitors.setdefault(source, set()).add(user_id)
+
+        if event_name in {"signup", "activation"}:
+            per_source_engaged.setdefault(source, set()).add(user_id)
+
+    rows: list[dict[str, Any]] = []
+    for source in sorted(per_source_visitors):
+        visitors = len(per_source_visitors[source])
+        engaged_visitors = len(per_source_engaged.get(source, set()))
+        rows.append(
+            {
+                "utm_source": source,
+                "visitors": visitors,
+                "engaged_visitors": engaged_visitors,
+                "engagement_rate": (engaged_visitors / visitors) if visitors else None,
+                "bounce_rate": (1 - (engaged_visitors / visitors)) if visitors else None,
+            }
+        )
+
+    rows.sort(key=lambda row: (-row["visitors"], row["utm_source"]))
+    return rows
 def backfill_conversion_metrics(
     events: list[dict[str, Any]],
     start_date: str,
