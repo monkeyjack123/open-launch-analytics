@@ -349,6 +349,10 @@ def backfill_conversion_metrics(
 ) -> list[dict[str, Any]]:
     """Recompute conversion metrics for an inclusive date range (YYYY-MM-DD)."""
 
+    normalized_start_date, normalized_end_date = _validate_optional_date_filters(start_date, end_date)
+    if normalized_start_date is None or normalized_end_date is None:
+        raise ValueError("backfill requires both start_date and end_date")
+
     filtered: list[dict[str, Any]] = []
     for event in events:
         timestamp = event.get("timestamp")
@@ -358,7 +362,7 @@ def backfill_conversion_metrics(
         day = _parse_date(timestamp)
         if day is None:
             continue
-        if start_date <= day <= end_date:
+        if normalized_start_date <= day <= normalized_end_date:
             filtered.append(event)
 
     return aggregate_conversion_metrics(filtered)

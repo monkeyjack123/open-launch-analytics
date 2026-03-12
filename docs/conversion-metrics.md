@@ -27,6 +27,12 @@ Only `visit`, `signup`, and `activation` events are counted.
 
 Recomputes conversion metrics for an inclusive date range (`YYYY-MM-DD`), then delegates to `aggregate_conversion_metrics`.
 
+Validation rules:
+
+- `start_date` and `end_date` are both required
+- both dates must be in strict `YYYY-MM-DD` format
+- `start_date` must be less than or equal to `end_date`
+
 ## Determinism
 
 Rows are sorted by `(date, utm_source, utm_campaign)` for stable output.

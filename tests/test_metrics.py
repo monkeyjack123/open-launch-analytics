@@ -133,6 +133,15 @@ class ConversionMetricsTests(unittest.TestCase):
         self.assertEqual(len(backfill_rows), 1)
         self.assertEqual(backfill_rows[0]["visits"], 1)
 
+    def test_backfill_conversion_metrics_validates_date_inputs(self):
+        events = []
+
+        with self.assertRaises(ValueError):
+            backfill_conversion_metrics(events, "2026/03/05", "2026-03-06")
+
+        with self.assertRaises(ValueError):
+            backfill_conversion_metrics(events, "2026-03-07", "2026-03-06")
+
     def test_summarize_funnel_supports_date_and_utm_filters(self):
         events = [
             {
