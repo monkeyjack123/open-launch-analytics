@@ -21,6 +21,7 @@ from .quality import (
     build_data_quality_report,
     build_health_status,
     build_ingestion_slo_report,
+    build_observability_snapshot,
 )
 from .sample_data import build_sample_events, sample_events_to_ndjson
 
@@ -49,6 +50,7 @@ __all__ = [
     "build_daily_quality_trend",
     "build_ingestion_slo_report",
     "build_health_status",
+    "build_observability_snapshot",
     "build_sample_events",
     "sample_events_to_ndjson",
 ]

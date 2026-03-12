@@ -135,6 +135,13 @@ Added daily data-quality trend helper for backlog **Issue #9** daily-reporting c
 - tests cover per-day rollups, recency limiting (`days`), and input validation
 - docs expanded in `docs/data-quality-health.md`
 
+Added unified observability snapshot helper for backlog **Issue #9** dashboard wiring:
+
+- `build_observability_snapshot(events, samples, ...)` returns one envelope with payload health, ingestion SLO posture, conversion attribution coverage, and daily quality trend data
+- top-level `ok/status` only reports healthy when both payload-health and ingestion SLO checks pass
+- tests cover degraded-composite behavior and conversion-event validation passthrough
+- docs expanded in `docs/data-quality-health.md`
+
 Added source engagement summary helper for funnel quality monitoring:
 
 - `summarize_source_engagement(events, start_date=None, end_date=None)` computes per-source unique visitors, engaged visitors, engagement rate, and bounce rate

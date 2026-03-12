@@ -8,6 +8,7 @@ from open_launch_analytics.quality import (
     build_data_quality_report,
     build_health_status,
     build_ingestion_slo_report,
+    build_observability_snapshot,
 )
 
 
@@ -286,6 +287,49 @@ class QualityTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "days must be positive when provided"):
             build_daily_quality_trend(events, days=0)
+
+    def test_build_observability_snapshot_combines_quality_and_slo_signals(self) -> None:
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T09:00:00Z",
+                "user_id": "u1",
+                "utm_source": "google",
+                "utm_medium": "cpc",
+                "utm_campaign": "launch",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "activation",
+                "timestamp": "2026-03-05T10:00:00Z",
+                "user_id": "u1",
+            },
+        ]
+        samples = [
+            {"ok": True, "latency_ms": 120},
+            {"ok": False, "latency_ms": 900},
+        ]
+
+        snapshot = build_observability_snapshot(
+            events,
+            samples,
+            max_error_rate=0.6,
+            max_p95_latency_ms=500,
+            quality_days=1,
+        )
+
+        self.assertFalse(snapshot["ok"])
+        self.assertEqual(snapshot["status"], "degraded")
+        self.assertIn("health", snapshot)
+        self.assertIn("ingestion_slo", snapshot)
+        self.assertIn("attribution", snapshot)
+        self.assertIn("daily_quality_trend", snapshot)
+        self.assertEqual(snapshot["daily_quality_trend"]["days"], 1)
+
+    def test_build_observability_snapshot_respects_conversion_event_validation(self) -> None:
+        with self.assertRaisesRegex(ValueError, "conversion_events must contain at least one non-empty event name"):
+            build_observability_snapshot([], [], conversion_events=["   "])
 
 
 if __name__ == "__main__":

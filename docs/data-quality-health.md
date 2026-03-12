@@ -53,6 +53,16 @@ Returns an envelope suitable for `/health` style endpoints:
 - `thresholds.max_invalid_payload_rate`
 - `quality` (embedded `build_data_quality_report` output)
 
+### `build_observability_snapshot(events, samples, ...)`
+
+Returns a combined observability payload for dashboard/API wiring so clients can fetch quality posture in one call:
+
+- top-level `ok/status` (healthy only when both payload-health and ingestion SLO checks pass)
+- `health` from `build_health_status(...)`
+- `ingestion_slo` from `build_ingestion_slo_report(...)`
+- `attribution` from `build_attribution_completeness_report(...)`
+- `daily_quality_trend` from `build_daily_quality_trend(...)` (optional `quality_days` limiter)
+
 ## Example
 
 ```python
@@ -69,3 +79,4 @@ health = build_health_status(events, max_invalid_payload_rate=0.02)
 - `build_attribution_completeness_report(...)` narrows that signal to conversion events so teams can track the MVP KPI "attribution match rate" directly.
 - `build_ingestion_slo_report(...)` adds p95 latency + error-rate SLO visibility expected by Issue #9, while surfacing malformed telemetry rows via `invalid_samples`.
 - `build_daily_quality_trend(...)` supports daily QA reporting by exposing per-day invalid/missing-UTM rates plus explicitly unassigned invalid payloads.
+- `build_observability_snapshot(...)` is the preferred frontend integration path when you need health/SLO/attribution/trend state from one endpoint call.

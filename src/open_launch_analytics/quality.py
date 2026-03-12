@@ -251,3 +251,40 @@ def build_health_status(events: list[dict[str, Any]], *, max_invalid_payload_rat
         },
         "quality": quality,
     }
+
+
+def build_observability_snapshot(
+    events: list[dict[str, Any]],
+    samples: list[dict[str, Any]],
+    *,
+    max_invalid_payload_rate: float = 0.01,
+    max_error_rate: float = 0.005,
+    max_p95_latency_ms: float = 500.0,
+    conversion_events: Iterable[str] | None = None,
+    quality_days: int | None = None,
+) -> dict[str, Any]:
+    """Return a single observability envelope for dashboard/API wiring.
+
+    Combines quality, attribution, ingestion-SLO, and daily-trend helpers so
+    frontends can render complete quality posture from one call.
+    """
+
+    health = build_health_status(events, max_invalid_payload_rate=max_invalid_payload_rate)
+    attribution = build_attribution_completeness_report(events, conversion_events=conversion_events)
+    ingestion_slo = build_ingestion_slo_report(
+        samples,
+        max_error_rate=max_error_rate,
+        max_p95_latency_ms=max_p95_latency_ms,
+    )
+    daily_quality_trend = build_daily_quality_trend(events, days=quality_days)
+
+    ok = bool(health["ok"]) and bool(ingestion_slo["ok"])
+
+    return {
+        "ok": ok,
+        "status": "healthy" if ok else "degraded",
+        "health": health,
+        "ingestion_slo": ingestion_slo,
+        "attribution": attribution,
+        "daily_quality_trend": daily_quality_trend,
+    }
