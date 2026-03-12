@@ -15,6 +15,7 @@ from .metrics import (
 )
 from .quality import (
     build_attribution_completeness_report,
+    build_daily_quality_trend,
     build_data_quality_report,
     build_health_status,
     build_ingestion_slo_report,
@@ -41,6 +42,7 @@ __all__ = [
     "ApiKeyManager",
     "build_data_quality_report",
     "build_attribution_completeness_report",
+    "build_daily_quality_trend",
     "build_ingestion_slo_report",
     "build_health_status",
     "build_sample_events",

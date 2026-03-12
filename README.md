@@ -128,6 +128,13 @@ Added ingestion SLO monitor helper for backlog **Issue #9** observability comple
 - tests cover degraded latency posture, empty sample behavior, and invalid-latency handling
 - docs expanded in `docs/data-quality-health.md`
 
+Added daily data-quality trend helper for backlog **Issue #9** daily-reporting completeness:
+
+- `build_daily_quality_trend(events, days=None)` returns UTC day-level quality rows with invalid/missing-UTM rates
+- includes `unassigned_invalid_events` for invalid payloads lacking a parsable timestamp
+- tests cover per-day rollups, recency limiting (`days`), and input validation
+- docs expanded in `docs/data-quality-health.md`
+
 Added source engagement summary helper for funnel quality monitoring:
 
 - `summarize_source_engagement(events, start_date=None, end_date=None)` computes per-source unique visitors, engaged visitors, engagement rate, and bounce rate

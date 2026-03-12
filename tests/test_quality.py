@@ -4,6 +4,7 @@ import unittest
 
 from open_launch_analytics.quality import (
     build_attribution_completeness_report,
+    build_daily_quality_trend,
     build_data_quality_report,
     build_health_status,
     build_ingestion_slo_report,
@@ -198,6 +199,93 @@ class QualityTests(unittest.TestCase):
 
         self.assertEqual(report["invalid_samples"], 2)
         self.assertEqual(report["latency"]["p95_ms"], 100.0)
+
+    def test_build_daily_quality_trend_groups_rates_by_day(self) -> None:
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T09:00:00Z",
+                "user_id": "u1",
+                "utm_source": "google",
+                "utm_medium": "cpc",
+                "utm_campaign": "launch",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "signup",
+                "timestamp": "2026-03-05T10:00:00Z",
+                "user_id": "u2",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "activation",
+                "timestamp": "2026-03-05T11:00:00Z",
+                "user_id": "u3",
+                "utm_source": "email",
+                "utm_medium": "newsletter",
+                "utm_campaign": "march",
+            },
+            {
+                "event_id": "evt_4",
+                "event_name": "visit",
+                "timestamp": "2026-03-06T09:00:00Z",
+                "user_id": "u4",
+            },
+            {
+                "event_id": "evt_5",
+                "event_name": "signup",
+                "user_id": "u5",  # invalid and unassigned (no timestamp)
+            },
+        ]
+
+        report = build_daily_quality_trend(events)
+
+        self.assertEqual(report["unassigned_invalid_events"], 1)
+        self.assertEqual(
+            report["rows"],
+            [
+                {
+                    "date": "2026-03-05",
+                    "events": 3,
+                    "invalid_events": 0,
+                    "invalid_payload_rate": 0.0,
+                    "missing_utm_events": 1,
+                    "missing_utm_rate": 1 / 3,
+                },
+                {
+                    "date": "2026-03-06",
+                    "events": 1,
+                    "invalid_events": 0,
+                    "invalid_payload_rate": 0.0,
+                    "missing_utm_events": 1,
+                    "missing_utm_rate": 1.0,
+                },
+            ],
+        )
+
+    def test_build_daily_quality_trend_supports_day_limit_and_validation(self) -> None:
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T09:00:00Z",
+                "user_id": "u1",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "visit",
+                "timestamp": "2026-03-06T09:00:00Z",
+                "user_id": "u2",
+            },
+        ]
+
+        report = build_daily_quality_trend(events, days=1)
+        self.assertEqual(len(report["rows"]), 1)
+        self.assertEqual(report["rows"][0]["date"], "2026-03-06")
+
+        with self.assertRaisesRegex(ValueError, "days must be positive when provided"):
+            build_daily_quality_trend(events, days=0)
 
 
 if __name__ == "__main__":

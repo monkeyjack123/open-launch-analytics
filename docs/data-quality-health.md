@@ -35,6 +35,15 @@ Returns ingestion reliability + latency SLO posture from request-level samples:
 - `thresholds.max_error_rate` and `thresholds.max_p95_latency_ms`
 - top-level `ok/status` (`healthy` or `degraded`)
 
+### `build_daily_quality_trend(events, days=None)`
+
+Returns day-bucketed quality trend rows for reporting and dashboard sparkline widgets:
+
+- `rows[]` with per-day `events`, `invalid_events`, `invalid_payload_rate`, `missing_utm_events`, and `missing_utm_rate`
+- ordered by date ascending (UTC day from event `timestamp`)
+- optional `days` limit keeps the most recent N days
+- `unassigned_invalid_events` counts invalid payloads that cannot be assigned to a day (for example missing/invalid timestamp)
+
 ### `build_health_status(events, max_invalid_payload_rate=0.01)`
 
 Returns an envelope suitable for `/health` style endpoints:
@@ -59,3 +68,4 @@ health = build_health_status(events, max_invalid_payload_rate=0.02)
 - Missing-UTM metrics intentionally track valid events that still normalize to fallback buckets, so teams can monitor attribution completeness.
 - `build_attribution_completeness_report(...)` narrows that signal to conversion events so teams can track the MVP KPI "attribution match rate" directly.
 - `build_ingestion_slo_report(...)` adds p95 latency + error-rate SLO visibility expected by Issue #9, while surfacing malformed telemetry rows via `invalid_samples`.
+- `build_daily_quality_trend(...)` supports daily QA reporting by exposing per-day invalid/missing-UTM rates plus explicitly unassigned invalid payloads.

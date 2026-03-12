@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from typing import Any, Iterable
 
 from .events import normalize_event, validate_event
@@ -153,6 +154,86 @@ def build_ingestion_slo_report(
             "max_error_rate": max_error_rate,
             "max_p95_latency_ms": max_p95_latency_ms,
         },
+    }
+
+
+def build_daily_quality_trend(
+    events: list[dict[str, Any]],
+    *,
+    days: int | None = None,
+) -> dict[str, Any]:
+    """Build per-day payload quality trend rows for dashboard/reporting use.
+
+    Groups events by UTC calendar day derived from event ``timestamp`` and returns
+    per-day invalid payload and missing-UTM rates.
+
+    Invalid payloads missing a parsable timestamp are excluded from day rows and
+    counted under ``unassigned_invalid_events``.
+    """
+
+    if days is not None and days <= 0:
+        raise ValueError("days must be positive when provided")
+
+    buckets: dict[date, dict[str, int]] = {}
+    unassigned_invalid_events = 0
+
+    for event in events:
+        errors = validate_event(event)
+        timestamp_raw = event.get("timestamp")
+
+        day_key: date | None = None
+        if isinstance(timestamp_raw, str):
+            try:
+                day_key = date.fromisoformat(timestamp_raw[:10])
+            except ValueError:
+                day_key = None
+
+        if day_key is None:
+            if errors:
+                unassigned_invalid_events += 1
+            continue
+
+        bucket = buckets.setdefault(
+            day_key,
+            {
+                "events": 0,
+                "invalid_events": 0,
+                "missing_utm_events": 0,
+            },
+        )
+        bucket["events"] += 1
+
+        if errors:
+            bucket["invalid_events"] += 1
+            continue
+
+        normalized = normalize_event(event)
+        if any(normalized[field] in {"direct", "unknown"} for field in TRACKED_UTM_FIELDS):
+            bucket["missing_utm_events"] += 1
+
+    sorted_days = sorted(buckets)
+    if days is not None:
+        sorted_days = sorted_days[-days:]
+
+    rows = []
+    for day in sorted_days:
+        bucket = buckets[day]
+        total = bucket["events"]
+        rows.append(
+            {
+                "date": day.isoformat(),
+                "events": total,
+                "invalid_events": bucket["invalid_events"],
+                "invalid_payload_rate": (bucket["invalid_events"] / total) if total else 0.0,
+                "missing_utm_events": bucket["missing_utm_events"],
+                "missing_utm_rate": (bucket["missing_utm_events"] / total) if total else 0.0,
+            }
+        )
+
+    return {
+        "days": days,
+        "rows": rows,
+        "unassigned_invalid_events": unassigned_invalid_events,
     }
 
 
