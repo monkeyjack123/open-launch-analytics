@@ -19,6 +19,8 @@ summarize_funnel(
 - `events`: list of raw event payloads
 - `start_date`: optional inclusive lower bound (`YYYY-MM-DD`)
 - `end_date`: optional inclusive upper bound (`YYYY-MM-DD`)
+  - when provided, both fields are validated strictly as `YYYY-MM-DD`
+  - if both are set, `start_date` must be `<= end_date`
 - `utm_source`: optional source filter (normalized to lowercase/trimmed)
 - `utm_campaign`: optional campaign filter (normalized to lowercase/trimmed)
 

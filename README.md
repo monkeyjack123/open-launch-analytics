@@ -92,6 +92,7 @@ Added dashboard top-card funnel summary utility for backlog **Issue #6**:
 - `summarize_funnel(events, start_date=None, end_date=None, utm_source=None, utm_campaign=None)` computes filter-aware totals for `visits/signups/activations`
 - computes dashboard card rates (`signup_rate`, `activation_rate`) from filtered events
 - supports date range and normalized UTM source/campaign filters
+- validates optional date filters and raises clear `ValueError` messages for invalid date format/ranges
 - tests for filtered and edge-case rate behavior
 - API contract docs in `docs/funnel-summary.md`
 
@@ -99,6 +100,7 @@ Added dashboard breakdown table backend utility for backlog **Issue #6**:
 
 - `build_funnel_breakdown(...)` returns source/campaign grouped rows for table rendering
 - supports date/source/campaign filters and deterministic sorting (`visits/signups/activations/rates/source/campaign`)
+- validates optional date filter format/range for safer dashboard query handling
 - supports optional `limit` for top-N table interactions
 - tests for filter/sort/limit behavior and invalid sort fallback
 - API contract docs in `docs/funnel-breakdown.md`

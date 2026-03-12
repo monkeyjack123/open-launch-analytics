@@ -25,6 +25,23 @@ def _within_date_range(day: str, start_date: str | None, end_date: str | None) -
     return True
 
 
+def _validate_optional_date_filters(start_date: str | None, end_date: str | None) -> tuple[str | None, str | None]:
+    normalized_start = start_date.strip() if isinstance(start_date, str) else None
+    normalized_end = end_date.strip() if isinstance(end_date, str) else None
+
+    if normalized_start is not None:
+        if _parse_date(normalized_start) != normalized_start:
+            raise ValueError("start_date must be YYYY-MM-DD when provided")
+    if normalized_end is not None:
+        if _parse_date(normalized_end) != normalized_end:
+            raise ValueError("end_date must be YYYY-MM-DD when provided")
+
+    if normalized_start is not None and normalized_end is not None and normalized_start > normalized_end:
+        raise ValueError("start_date must be <= end_date")
+
+    return normalized_start, normalized_end
+
+
 def aggregate_conversion_metrics(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Aggregate visits/signups/activations by date/source/campaign.
 
@@ -130,6 +147,8 @@ def summarize_funnel(
     - utm_source / utm_campaign: normalized via event normalization rules
     """
 
+    normalized_start_date, normalized_end_date = _validate_optional_date_filters(start_date, end_date)
+
     visits = 0
     signups = 0
     activations = 0
@@ -148,7 +167,7 @@ def summarize_funnel(
             continue
 
         day = _parse_date(timestamp)
-        if day is None or not _within_date_range(day, start_date, end_date):
+        if day is None or not _within_date_range(day, normalized_start_date, normalized_end_date):
             continue
 
         if normalized_source is not None and event["utm_source"] != normalized_source:
@@ -189,6 +208,7 @@ def build_funnel_breakdown(
     filtering and deterministic sorting for table interactions.
     """
 
+    normalized_start_date, normalized_end_date = _validate_optional_date_filters(start_date, end_date)
     normalized_source = utm_source.strip().lower() if isinstance(utm_source, str) else None
     normalized_campaign = utm_campaign.strip().lower() if isinstance(utm_campaign, str) else None
 
@@ -205,7 +225,7 @@ def build_funnel_breakdown(
             continue
 
         day = _parse_date(timestamp)
-        if day is None or not _within_date_range(day, start_date, end_date):
+        if day is None or not _within_date_range(day, normalized_start_date, normalized_end_date):
             continue
 
         source = event["utm_source"]

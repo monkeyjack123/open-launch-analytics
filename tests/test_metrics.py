@@ -283,6 +283,27 @@ class ConversionMetricsTests(unittest.TestCase):
         self.assertEqual(rows[0]["utm_source"], "a")
         self.assertEqual(rows[0]["visits"], 2)
 
+    def test_funnel_helpers_validate_optional_date_filters(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "visit",
+                "timestamp": "2026-03-05T08:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            }
+        ]
+
+        with self.assertRaises(ValueError):
+            summarize_funnel(events, start_date="2026/03/05")
+
+        with self.assertRaises(ValueError):
+            build_funnel_breakdown(events, end_date="03-05-2026")
+
+        with self.assertRaises(ValueError):
+            summarize_funnel(events, start_date="2026-03-06", end_date="2026-03-05")
+
     def test_resolve_date_range_supports_7d_and_30d(self):
         start_7d, end_7d = resolve_date_range("7d", today=date(2026, 3, 9))
         self.assertEqual(start_7d, "2026-03-03")
