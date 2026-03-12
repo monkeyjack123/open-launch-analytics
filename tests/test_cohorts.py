@@ -1,6 +1,6 @@
 import unittest
 
-from open_launch_analytics.cohorts import build_signup_cohorts
+from open_launch_analytics.cohorts import build_cohort_matrix, build_signup_cohorts
 
 
 class SignupCohortTests(unittest.TestCase):
@@ -134,6 +134,59 @@ class SignupCohortTests(unittest.TestCase):
         rows = build_signup_cohorts(events)
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["signups"], 1)
+
+    def test_build_signup_cohorts_rejects_invalid_days_tuple(self):
+        with self.assertRaises(ValueError):
+            build_signup_cohorts([], days=(-1,))
+
+    def test_build_cohort_matrix_returns_columns_legend_and_totals(self):
+        events = [
+            {
+                "event_id": "evt_1",
+                "event_name": "signup",
+                "timestamp": "2026-03-01T09:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_2",
+                "event_name": "activation",
+                "timestamp": "2026-03-01T12:00:00Z",
+                "user_id": "u1",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_3",
+                "event_name": "signup",
+                "timestamp": "2026-03-02T09:00:00Z",
+                "user_id": "u2",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+            {
+                "event_id": "evt_4",
+                "event_name": "activation",
+                "timestamp": "2026-03-03T12:00:00Z",
+                "user_id": "u2",
+                "utm_source": "linkedin",
+                "utm_campaign": "spring",
+            },
+        ]
+
+        matrix = build_cohort_matrix(events, days=(1, 0, 1))
+
+        self.assertEqual(matrix["columns"][0]["key"], "cohort_date")
+        self.assertIn("d0", matrix["legend"])
+        self.assertIn("d1", matrix["legend"])
+        self.assertEqual(len(matrix["rows"]), 2)
+        self.assertEqual(matrix["totals"]["cohort_date"], "TOTAL")
+        self.assertEqual(matrix["totals"]["signups"], 2)
+        self.assertEqual(matrix["totals"]["d0_activated"], 1)
+        self.assertEqual(matrix["totals"]["d1_activated"], 1)
+        self.assertEqual(matrix["totals"]["d0_rate"], 0.5)
+        self.assertEqual(matrix["totals"]["d1_rate"], 0.5)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,18 @@
   - unknown key returns `403` with `invalid_api_key`
   - valid key proceeds to payload validation + normalization and returns `202` on success
 
+## Key lifecycle helper (owner flows)
+
+`ApiKeyManager` adds an MVP key-management surface for owner-only create/rotate/revoke behavior without exposing plaintext secrets after creation.
+
+- `create_key(name)` returns one-time plaintext `api_key` + metadata (`key_id`, `created_at`)
+- `rotate_key(key_id)` issues a fresh plaintext key and invalidates the prior secret
+- `revoke_key(key_id)` marks a key inactive
+- `list_keys()` returns metadata with redacted `preview` only (never full secret)
+- `active_key_hashes()` returns SHA-256 digests for secure runtime validation
+
+Use `validate_api_key_hash(api_key, valid_api_key_hashes)` for ingest auth when keys are stored as digests.
+
 ## Example response envelopes
 
 ```json

@@ -16,6 +16,13 @@ def _parse_date(value: str) -> datetime.date | None:
         return None
 
 
+def _normalize_days(days: tuple[int, ...]) -> tuple[int, ...]:
+    normalized = sorted({day for day in days if isinstance(day, int) and day >= 0})
+    if not normalized:
+        raise ValueError("days must contain at least one non-negative integer")
+    return tuple(normalized)
+
+
 def build_signup_cohorts(
     events: list[dict[str, Any]],
     days: tuple[int, ...] = (0, 1, 7),
@@ -28,6 +35,8 @@ def build_signup_cohorts(
     Activation is counted for a day offset when an activation event exists on that
     exact offset from the user's cohort date.
     """
+
+    days = _normalize_days(days)
 
     normalized_source = utm_source.strip().lower() if isinstance(utm_source, str) else None
     normalized_campaign = (
@@ -96,3 +105,70 @@ def build_signup_cohorts(
         rows.append(row)
 
     return rows
+
+
+def build_cohort_matrix(
+    events: list[dict[str, Any]],
+    days: tuple[int, ...] = (0, 1, 7),
+    utm_source: str | None = None,
+    utm_campaign: str | None = None,
+) -> dict[str, Any]:
+    """Build a dashboard-friendly cohort matrix envelope with column metadata.
+
+    Returns:
+      {
+        "columns": [...],
+        "legend": {...},
+        "rows": [...],
+        "totals": {...}
+      }
+    """
+
+    normalized_days = _normalize_days(days)
+    rows = build_signup_cohorts(
+        events,
+        days=normalized_days,
+        utm_source=utm_source,
+        utm_campaign=utm_campaign,
+    )
+
+    columns = [
+        {"key": "cohort_date", "label": "Cohort"},
+        {"key": "signups", "label": "Signups"},
+    ]
+    legend: dict[str, str] = {}
+
+    for offset in normalized_days:
+        columns.append(
+            {
+                "key": f"d{offset}_activated",
+                "label": f"D{offset} activated",
+            }
+        )
+        columns.append(
+            {
+                "key": f"d{offset}_rate",
+                "label": f"D{offset} activation rate",
+            }
+        )
+        if offset == 0:
+            legend[f"d{offset}"] = "Users who activated on the same day as signup"
+        else:
+            legend[f"d{offset}"] = f"Users who activated exactly {offset} day(s) after signup"
+
+    total_signups = sum(row.get("signups", 0) for row in rows)
+    totals: dict[str, Any] = {"cohort_date": "TOTAL", "signups": total_signups}
+
+    for offset in normalized_days:
+        activated_key = f"d{offset}_activated"
+        rate_key = f"d{offset}_rate"
+        total_activated = sum(row.get(activated_key, 0) for row in rows)
+        totals[activated_key] = total_activated
+        totals[rate_key] = (total_activated / total_signups) if total_signups else None
+
+    return {
+        "columns": columns,
+        "legend": legend,
+        "rows": rows,
+        "totals": totals,
+    }
